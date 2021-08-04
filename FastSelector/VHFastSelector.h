@@ -25,4 +25,6 @@
 
 - (void)tableViewDidScroll;
 
+- (void)tableViewDidRefresh;
+
 @end
