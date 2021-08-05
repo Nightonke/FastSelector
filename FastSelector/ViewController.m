@@ -15,6 +15,9 @@
 @property (nonatomic, strong) VHFastSelector *fastSelector;
 @property (nonatomic, strong) NSMutableSet<NSIndexPath *> *selectedIndexPathes;
 
+@property (nonatomic, assign) NSInteger section;
+@property (nonatomic, assign) NSInteger row;
+
 @end
 
 @implementation ViewController
@@ -25,6 +28,8 @@
     if (self)
     {
         _selectedIndexPathes = [NSMutableSet set];
+        _section = 1;
+        _row = 1000;
     }
     return self;
 }
@@ -50,6 +55,18 @@
     fastSelector.delegate = self;
     [self.view addSubview:fastSelector];
     self.fastSelector = fastSelector;
+    
+    self.navigationItem.rightBarButtonItems = @[
+        [[UIBarButtonItem alloc] initWithTitle:@"Adjust Table" style:UIBarButtonItemStylePlain target:self action:@selector(adjustTableButtonDidClick:)],
+        [[UIBarButtonItem alloc] initWithTitle:@"Unselect All" style:UIBarButtonItemStylePlain target:self action:@selector(unselectAllButtonDidClick:)]
+    ];
+    
+    [self refreshTitle];
+}
+
+- (void)refreshTitle
+{
+    [self setTitle:[NSString stringWithFormat:@"%ld Selected", self.selectedIndexPathes.count]];
 }
 
 #pragma mark - VHFastSelectorDelegate
@@ -61,14 +78,18 @@
 
 - (void)fastSelector:(VHFastSelector *)fs setIndexPath:(NSIndexPath *)indexPath asSelected:(BOOL)selected
 {
-    VHTableViewCell *cell = (VHTableViewCell *)[self.tableView cellForRowAtIndexPath:indexPath];
-    [cell setCustomSelected:selected];
+    if ([[self.tableView indexPathsForVisibleRows] containsObject:indexPath])
+    {
+        VHTableViewCell *cell = (VHTableViewCell *)[self.tableView cellForRowAtIndexPath:indexPath];
+        [cell setCustomSelected:selected];
+    }
     
     if (selected)
     {
         if (![self.selectedIndexPathes containsObject:indexPath])
         {
             [self.selectedIndexPathes addObject:indexPath];
+            [self triggerImpactLightFeedback];
         }
     }
     else
@@ -76,10 +97,72 @@
         if ([self.selectedIndexPathes containsObject:indexPath])
         {
             [self.selectedIndexPathes removeObject:indexPath];
+            [self triggerImpactLightFeedback];
         }
     }
     
-    [self setTitle:[NSString stringWithFormat:@"%ld Selected", self.selectedIndexPathes.count]];
+    [self refreshTitle];
+}
+
+#pragma mark - Action
+
+- (void)adjustTableButtonDidClick:(UIButton *)button
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:nil message:@"Adjust the tableView:" preferredStyle:UIAlertControllerStyleAlert];
+    __weak UIAlertController *weakAlertController = alertController;
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"Number of sections";
+        textField.keyboardType = UIKeyboardTypeNumberPad;
+    }];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"Number of rows/section";
+        textField.keyboardType = UIKeyboardTypeNumberPad;
+    }];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        UITextField *sectionTextField = weakAlertController.textFields.firstObject;
+        UITextField *rowTextField = weakAlertController.textFields.lastObject;
+        NSInteger section = -1;
+        NSInteger row = -1;
+        if (sectionTextField.text.length > 0 && [sectionTextField.text integerValue] > 0)
+        {
+            section = [sectionTextField.text integerValue];
+        }
+        if (rowTextField.text.length > 0 && [rowTextField.text integerValue] >= 0)
+        {
+            row = [rowTextField.text integerValue];
+        }
+        if (section >= 0 && row >= 0)
+        {
+            self.section = section;
+            self.row = row;
+            [self unselectAllAndRefresh];
+        }
+    }]];
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void)unselectAllButtonDidClick:(UIButton *)button
+{
+    [self unselectAllAndRefresh];
+}
+
+- (void)unselectAllAndRefresh
+{
+    [self.selectedIndexPathes removeAllObjects];
+    [self.tableView reloadData];
+    [self.fastSelector tableViewDidRefresh];
+    [self refreshTitle];
+}
+
+- (void)triggerImpactLightFeedback
+{
+    if (@available(iOS 10.0, *))
+    {
+        UIImpactFeedbackGenerator *imp = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
+        [imp prepare];
+        [imp impactOccurred];
+    }
 }
 
 #pragma mark - UITableViewDataSource
@@ -95,12 +178,12 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 200;
+    return self.section;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return 1;
+    return self.row;
 }
 
 #pragma mark - UITableViewDelegate

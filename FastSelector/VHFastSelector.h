@@ -17,6 +17,8 @@
 
 @end
 
+
+//multipleTouchEnabled
 @interface VHFastSelector : UIView
 
 @property (nonatomic, weak) UITableView *tableView;
