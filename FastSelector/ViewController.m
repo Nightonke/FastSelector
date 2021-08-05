@@ -89,7 +89,6 @@
         if (![self.selectedIndexPathes containsObject:indexPath])
         {
             [self.selectedIndexPathes addObject:indexPath];
-            [self triggerImpactLightFeedback];
         }
     }
     else
@@ -97,11 +96,40 @@
         if ([self.selectedIndexPathes containsObject:indexPath])
         {
             [self.selectedIndexPathes removeObject:indexPath];
-            [self triggerImpactLightFeedback];
         }
     }
     
     [self refreshTitle];
+}
+
+- (void)fastSelectorAutoCheck:(VHFastSelector *)fs
+{
+    // check
+    NSMutableString *str = [NSMutableString string];
+    for (NSInteger i = 0; i < 1000; i++)
+    {
+        if ([self.selectedIndexPathes containsObject:[NSIndexPath indexPathForRow:i inSection:0]])
+        {
+            [str appendString:@"1"];
+        }
+        else
+        {
+            [str appendString:@"0"];
+        }
+    }
+    NSArray<NSString *> *components = [str componentsSeparatedByString:@"0"];
+    NSInteger count = 0;
+    for (NSString *component in components)
+    {
+        if (component.length > 0)
+        {
+            count++;
+        }
+    }
+    if (count > 1)
+    {
+        NSLog(@"xxx");
+    }
 }
 
 #pragma mark - Action
@@ -153,16 +181,6 @@
     [self.tableView reloadData];
     [self.fastSelector tableViewDidRefresh];
     [self refreshTitle];
-}
-
-- (void)triggerImpactLightFeedback
-{
-    if (@available(iOS 10.0, *))
-    {
-        UIImpactFeedbackGenerator *imp = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
-        [imp prepare];
-        [imp impactOccurred];
-    }
 }
 
 #pragma mark - UITableViewDataSource

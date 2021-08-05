@@ -133,7 +133,7 @@
         touchData.touchingLocationInView = [touch locationInView:self];
         touchData.touchingLocation = [self convertPoint:touchData.touchingLocationInView toView:self.tableView];
         [self updateToSelectIfNeeded:touchData];
-        [self selectCells:touchData];
+        [self selectCells:touchData fromSwipe:YES];
         touchData.touchedLocation = touchData.touchingLocation;
         touchData.touchedLocationInView = touchData.touchingLocationInView;
     }
@@ -145,7 +145,7 @@
     {
         touchData.touchingLocation = [self convertPoint:touchData.touchingLocationInView toView:self.tableView];
         [self updateToSelectIfNeeded:touchData];
-        [self selectCells:touchData];
+        [self selectCells:touchData fromSwipe:NO];
         touchData.touchedLocation = touchData.touchingLocation;
     }
 }
@@ -164,7 +164,7 @@
     }
 }
 
-- (void)selectCells:(VHFastSelectorTouchData *)touchData
+- (void)selectCells:(VHFastSelectorTouchData *)touchData fromSwipe:(BOOL)fromSwipe
 {
     if (touchData.isToSelectUnknown)
     {
@@ -174,37 +174,40 @@
     
     CGFloat rectX = MIN(touchData.touchedLocation.x, touchData.touchingLocation.x);
     CGFloat rectY = MIN(touchData.touchedLocation.y, touchData.touchingLocation.y);
-    CGFloat rectW = MAX(fabs(touchData.touchedLocation.x - touchData.touchingLocation.x), 1);
-    CGFloat rectH = MAX(fabs(touchData.touchedLocation.y - touchData.touchingLocation.y), 1);
+    CGFloat rectW = fabs(touchData.touchedLocation.x - touchData.touchingLocation.x);
+    CGFloat rectH = fabs(touchData.touchedLocation.y - touchData.touchingLocation.y);
     
     CGRect changeRect = CGRectMake(rectX, rectY, rectW, rectH);
     
-    NSArray<NSIndexPath *> *changeIndexPaths = [self.tableView indexPathsForRowsInRect:changeRect];
-    
     BOOL isMovingUp = touchData.touchingLocation.y < touchData.touchedLocation.y;
     BOOL isMovingDown = touchData.touchingLocation.y > touchData.touchedLocation.y;
+    NSArray<NSIndexPath *> *changeIndexPaths = [self indexPathsForRowsInRect:changeRect fromVisibleCell:fromSwipe isMovingUp:isMovingUp];
+    
     
     if (CGRectGetMinY(changeRect) <= touchData.beginLocation.y && touchData.beginLocation.y <= CGRectGetMaxY(changeRect))
     {
         if (isMovingUp)
         {
+            NSLog(@"isMovingUp");
             CGRect moreRect = CGRectMake(rectX, rectY, rectW, touchData.beginLocation.y - CGRectGetMinY(changeRect));
             CGRect lessRect = CGRectMake(rectX, touchData.beginLocation.y, rectW, CGRectGetMaxY(changeRect) - touchData.beginLocation.y);
             
-            [self setCellsInRect:moreRect asSelected:touchData.toSelect forTouch:touchData];
-            [self setCellsInRect:lessRect asSelected:!touchData.toSelect forTouch:touchData];
+            [self setCellsInRect:moreRect asSelected:touchData.toSelect forTouch:touchData fromSwipe:fromSwipe isMovingUp:isMovingUp];
+            [self setCellsInRect:lessRect asSelected:!touchData.toSelect forTouch:touchData fromSwipe:fromSwipe isMovingUp:isMovingUp];
         }
         else if (isMovingDown)
         {
+            NSLog(@"isMovingDown");
             CGRect lessRect = CGRectMake(rectX, rectY, rectW, touchData.beginLocation.y - CGRectGetMinY(changeRect));
             CGRect moreRect = CGRectMake(rectX, touchData.beginLocation.y, rectW, CGRectGetMaxY(changeRect) - touchData.beginLocation.y);
             
-            [self setCellsInRect:moreRect asSelected:touchData.toSelect forTouch:touchData];
-            [self setCellsInRect:lessRect asSelected:!touchData.toSelect forTouch:touchData];
+            [self setCellsInRect:moreRect asSelected:touchData.toSelect forTouch:touchData fromSwipe:fromSwipe isMovingUp:isMovingUp];
+            [self setCellsInRect:lessRect asSelected:!touchData.toSelect forTouch:touchData fromSwipe:fromSwipe isMovingUp:isMovingUp];
         }
         else
         {
-            [self setCellsInRect:changeRect asSelected:touchData.toSelect forTouch:touchData];
+            NSLog(@"isMovingCenter");
+            [self setCellsInRect:changeRect asSelected:touchData.toSelect forTouch:touchData fromSwipe:fromSwipe isMovingUp:isMovingUp];
         }
     }
     else
@@ -212,6 +215,7 @@
         BOOL isMore = fabs(touchData.touchingLocation.y - touchData.beginLocation.y) > fabs(touchData.touchedLocation.y - touchData.beginLocation.y);
         if (isMore)
         {
+            NSLog(@"isMore");
             for (NSIndexPath *indexPath in changeIndexPaths)
             {
                 [self.delegate fastSelector:self setIndexPath:indexPath asSelected:touchData.toSelect];
@@ -219,7 +223,17 @@
         }
         else
         {
-            NSIndexPath *touchingIndex = [self.tableView indexPathForRowAtPoint:touchData.touchingLocationInView];
+            NSLog(@"isNotMore");
+            static NSIndexPath *kLastTouchingIndex = nil;
+            NSIndexPath *touchingIndex = [self.tableView indexPathForRowAtPoint:touchData.touchingLocation];
+            NSLog(@"%lf %lf %lf %lf", changeRect.origin.x, changeRect.origin.y, changeRect.size.width, changeRect.size.height);
+            NSLog(@"TouchingIndex: %@", touchingIndex);
+            NSLog(@"ChangeIndexs: %@", changeIndexPaths);
+            if (kLastTouchingIndex && ![kLastTouchingIndex isEqual:touchingIndex])
+            {
+                NSLog(@"xx");
+            }
+            kLastTouchingIndex = touchingIndex;
             for (NSIndexPath *indexPath in changeIndexPaths)
             {
                 if (![indexPath isEqual:touchingIndex] && ![indexPath isEqual:touchData.beginTouchIndexPath])
@@ -229,11 +243,13 @@
             }
         }
     }
+    
+    [self.delegate fastSelectorAutoCheck:self];
 }
 
-- (void)setCellsInRect:(CGRect)rect asSelected:(BOOL)selected forTouch:(VHFastSelectorTouchData *)touchData
+- (void)setCellsInRect:(CGRect)rect asSelected:(BOOL)selected forTouch:(VHFastSelectorTouchData *)touchData fromSwipe:(BOOL)fromSwipe isMovingUp:(BOOL)isMovingUp
 {
-    NSArray<NSIndexPath *> *indexPaths = [self.tableView indexPathsForRowsInRect:rect];
+    NSArray<NSIndexPath *> *indexPaths = [self indexPathsForRowsInRect:rect fromVisibleCell:fromSwipe isMovingUp:isMovingUp];
     for (NSIndexPath *indexPath in indexPaths)
     {
         if (selected != touchData.toSelect && [indexPath isEqual:touchData.beginTouchIndexPath])
@@ -253,6 +269,49 @@
         _touchDatas = [NSMutableDictionary dictionary];
     }
     return _touchDatas;
+}
+
+#pragma mark - Utils
+
+- (NSArray<NSIndexPath *> *)indexPathsForRowsInRect:(CGRect)rect fromVisibleCell:(BOOL)fromVisibleCell isMovingUp:(BOOL)isMovingUp
+{
+//    if (!fromVisibleCell)
+    {
+        NSIndexPath *bottomIndexPath = [self.tableView indexPathForRowAtPoint:CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect))];
+        NSArray<NSIndexPath *> *indexPaths = [self.tableView indexPathsForRowsInRect:rect];
+        if (bottomIndexPath)
+        {
+            if (indexPaths)
+            {
+                if (![indexPaths containsObject:bottomIndexPath])
+                {
+                    return [indexPaths arrayByAddingObject:bottomIndexPath];
+                }
+                else
+                {
+                    return indexPaths;
+                }
+            }
+            else
+            {
+                return @[bottomIndexPath];
+            }
+        }
+        else
+        {
+            return indexPaths;
+        }
+    }
+    
+//    NSMutableArray<NSIndexPath *> *indexPaths = [NSMutableArray array];
+//    for (UITableViewCell *cell in self.tableView.visibleCells)
+//    {
+//        if (CGRectIntersectsRect(rect, cell.frame))
+//        {
+//            [indexPaths addObject:[self.tableView indexPathForCell:cell]];
+//        }
+//    }
+//    return indexPaths.copy;
 }
 
 @end
