@@ -8,10 +8,11 @@
 #import "ViewController.h"
 #import "VHTableViewCell.h"
 #import "VHFastSelector.h"
+#import "TestTableView.h"
 
 @interface ViewController ()<UITableViewDataSource, UITableViewDelegate, VHFastSelectorDelegate>
 
-@property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) TestTableView *tableView;
 @property (nonatomic, strong) VHFastSelector *fastSelector;
 @property (nonatomic, strong) NSMutableSet<NSIndexPath *> *selectedIndexPathes;
 
@@ -39,7 +40,7 @@
     [super loadView];
     self.view.backgroundColor = UIColor.whiteColor;
     
-    UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
+    TestTableView *tableView = [[TestTableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
     [tableView registerClass:VHTableViewCell.class forCellReuseIdentifier:@"VHTableViewCell"];
     tableView.dataSource = self;
     tableView.delegate = self;
