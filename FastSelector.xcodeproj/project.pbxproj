@@ -14,7 +14,6 @@
 		AFD0A29126B9356A004D9AB6 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AFD0A29026B9356A004D9AB6 /* main.m */; };
 		AFD0A2A726B939E0004D9AB6 /* VHTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = AFD0A2A626B939E0004D9AB6 /* VHTableViewCell.m */; };
 		AFD0A2AC26B944E7004D9AB6 /* VHFastSelector.m in Sources */ = {isa = PBXBuildFile; fileRef = AFD0A2AB26B944E6004D9AB6 /* VHFastSelector.m */; };
-		AFD0A5ED26BCD682004D9AB6 /* TestTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = AFD0A5EC26BCD67E004D9AB6 /* TestTableView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,8 +30,6 @@
 		AFD0A2A626B939E0004D9AB6 /* VHTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VHTableViewCell.m; sourceTree = "<group>"; };
 		AFD0A2AA26B944E6004D9AB6 /* VHFastSelector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VHFastSelector.h; sourceTree = "<group>"; };
 		AFD0A2AB26B944E6004D9AB6 /* VHFastSelector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VHFastSelector.m; sourceTree = "<group>"; };
-		AFD0A5EB26BCD67E004D9AB6 /* TestTableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestTableView.h; sourceTree = "<group>"; };
-		AFD0A5EC26BCD67E004D9AB6 /* TestTableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestTableView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,8 +66,6 @@
 				AFD0A27F26B93568004D9AB6 /* AppDelegate.m */,
 				AFD0A28426B93568004D9AB6 /* ViewController.h */,
 				AFD0A28526B93568004D9AB6 /* ViewController.m */,
-				AFD0A5EB26BCD67E004D9AB6 /* TestTableView.h */,
-				AFD0A5EC26BCD67E004D9AB6 /* TestTableView.m */,
 				AFD0A2A526B939E0004D9AB6 /* VHTableViewCell.h */,
 				AFD0A2A626B939E0004D9AB6 /* VHTableViewCell.m */,
 				AFD0A2AA26B944E6004D9AB6 /* VHFastSelector.h */,
@@ -156,7 +151,6 @@
 				AFD0A2A726B939E0004D9AB6 /* VHTableViewCell.m in Sources */,
 				AFD0A28026B93568004D9AB6 /* AppDelegate.m in Sources */,
 				AFD0A29126B9356A004D9AB6 /* main.m in Sources */,
-				AFD0A5ED26BCD682004D9AB6 /* TestTableView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

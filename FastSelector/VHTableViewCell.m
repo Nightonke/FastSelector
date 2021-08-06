@@ -21,6 +21,8 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self)
     {
+        self.backgroundColor = UIColor.clearColor;
+        
         _selectImageView = [[UIImageView alloc] init];
         [self.contentView addSubview:_selectImageView];
         

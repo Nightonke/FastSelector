@@ -8,11 +8,10 @@
 #import "ViewController.h"
 #import "VHTableViewCell.h"
 #import "VHFastSelector.h"
-#import "TestTableView.h"
 
 @interface ViewController ()<UITableViewDataSource, UITableViewDelegate, VHFastSelectorDelegate>
 
-@property (nonatomic, strong) TestTableView *tableView;
+@property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) VHFastSelector *fastSelector;
 @property (nonatomic, strong) NSMutableSet<NSIndexPath *> *selectedIndexPathes;
 
@@ -40,21 +39,23 @@
     [super loadView];
     self.view.backgroundColor = UIColor.whiteColor;
     
-    TestTableView *tableView = [[TestTableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
+    UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStyleGrouped];
     [tableView registerClass:VHTableViewCell.class forCellReuseIdentifier:@"VHTableViewCell"];
     tableView.dataSource = self;
     tableView.delegate = self;
     tableView.allowsSelection = NO;
+    tableView.backgroundColor = UIColor.whiteColor;
+    tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [self.view addSubview:tableView];
     self.tableView = tableView;
     
-    VHFastSelector *fastSelector = [[VHFastSelector alloc] initWithFrame:CGRectMake(tableView.frame.origin.x,
-                                                                                    tableView.frame.origin.y,
-                                                                                    70,
-                                                                                    tableView.frame.size.height)];
+    CGRect frame = tableView.frame;
+    frame.size.width = 70;
+    VHFastSelector *fastSelector = [[VHFastSelector alloc] initWithFrame:frame];
     fastSelector.tableView = tableView;
     fastSelector.delegate = self;
     [self.view addSubview:fastSelector];
+    
     self.fastSelector = fastSelector;
     
     self.navigationItem.rightBarButtonItems = @[
@@ -101,36 +102,6 @@
     }
     
     [self refreshTitle];
-}
-
-- (void)fastSelectorAutoCheck:(VHFastSelector *)fs
-{
-    // check
-    NSMutableString *str = [NSMutableString string];
-    for (NSInteger i = 0; i < 1000; i++)
-    {
-        if ([self.selectedIndexPathes containsObject:[NSIndexPath indexPathForRow:i inSection:0]])
-        {
-            [str appendString:@"1"];
-        }
-        else
-        {
-            [str appendString:@"0"];
-        }
-    }
-    NSArray<NSString *> *components = [str componentsSeparatedByString:@"0"];
-    NSInteger count = 0;
-    for (NSString *component in components)
-    {
-        if (component.length > 0)
-        {
-            count++;
-        }
-    }
-    if (count > 1)
-    {
-        NSLog(@"xxx");
-    }
 }
 
 #pragma mark - Action

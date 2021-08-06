@@ -24,20 +24,22 @@
 /// @param selected selected
 - (void)fastSelector:(VHFastSelector *)fs setIndexPath:(NSIndexPath *)indexPath asSelected:(BOOL)selected;
 
-- (void)fastSelectorAutoCheck:(VHFastSelector *)fs;
-
 @end
 
-
-//multipleTouchEnabled
+/// Fast selector for UITableView.
+/// Wiki: https://github.com/Nightonke/FastSelector
 @interface VHFastSelector : UIView
 
+/// The corresponding tableView.
 @property (nonatomic, strong) UITableView *tableView;
 
+/// Delegate
 @property (nonatomic, weak) id<VHFastSelectorDelegate> delegate;
 
+/// Call this method to select or unselect cells when the corresponding tableView is scrolling.
 - (void)tableViewDidScroll;
 
+/// Call this method to cancel current touch events when the corresponding tableView 'reloadData'.
 - (void)tableViewDidRefresh;
 
 @end
