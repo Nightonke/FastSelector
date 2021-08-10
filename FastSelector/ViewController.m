@@ -45,7 +45,6 @@
     tableView.delegate = self;
     tableView.allowsSelection = NO;
     tableView.backgroundColor = UIColor.whiteColor;
-    tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [self.view addSubview:tableView];
     self.tableView = tableView;
     

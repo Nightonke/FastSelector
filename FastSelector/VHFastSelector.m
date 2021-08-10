@@ -5,6 +5,65 @@
 //  Created by Viktorhuang on 2021/8/3.
 //
 
+// When fingers' moving or tableView's scrolling, we can figure out the do and undo rect by the touching, touched and touch-begin locations.
+//
+// Case 1 & 2:
+//
+// |------------------------                         |------------------------
+// | Cell A       · Touching location                | Cell A       · Touch begin location
+// |------------------------                         |------------------------
+// | Cell B                                          | Cell B
+// |------------------------                         |------------------------
+// | Cell C       · Touched location                 | Cell C       · Touched location
+// |------------------------                         |------------------------
+// | Cell D                                          | Cell D
+// |------------------------                         |------------------------
+// | Cell E       · Touch begin location             | Cell E       · Touching location
+// |------------------------                         |------------------------
+//       (Touch from E to A)                               (Touch from A to E)
+//
+// DoRect = Rect between touching loaction and touched location.
+// We should do the selection(or unselection) in DoRect.
+//
+//
+// Case 3 & 4:
+//
+// |------------------------                         |------------------------
+// | Cell A       · Touched location                 | Cell A       · Touch begin location
+// |------------------------                         |------------------------
+// | Cell B                                          | Cell B
+// |------------------------                         |------------------------
+// | Cell C       · Touching location                | Cell C       · Touching location
+// |------------------------                         |------------------------
+// | Cell D                                          | Cell D
+// |------------------------                         |------------------------
+// | Cell E       · Touch begin location             | Cell E       · Touched location
+// |------------------------                         |------------------------
+//       (Touch from E to A to C)                          (Touch from A to E to C)
+//
+// UndoRect = Rect between touching loaction and touched location.
+// We should undo the selection(or unselection) in UndoRect.
+//
+//
+// Case 5 & 6:
+//
+// |------------------------                         |------------------------
+// | Cell A       · Touched location                 | Cell A       · Touching location
+// |------------------------                         |------------------------
+// | Cell B                                          | Cell B
+// |------------------------                         |------------------------
+// | Cell C       · Touch begin location             | Cell C       · Touch begin location
+// |------------------------                         |------------------------
+// | Cell D                                          | Cell D
+// |------------------------                         |------------------------
+// | Cell E       · Touching location                | Cell E       · Touched location
+// |------------------------                         |------------------------
+//       (Touch from C to A to E)                          (Touch from C to E to A)
+//
+// DoRect = Rect between touching loaction and touch begin location.
+// UndoRect = Rect between touched loaction and touch begin location.
+// We should do the selection(or unselection) in DoRect, and undo the selection(or unselection) in UndoRect.
+
 #import "VHFastSelector.h"
 
 /// TouchData stores the infomations of a UITouch.
@@ -35,7 +94,7 @@
 
 @interface VHFastSelector ()
 
-@property (nonatomic, strong) NSMutableDictionary<NSString *, VHFastSelectorTouchData *> *touchDatas;
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, VHFastSelectorTouchData *> *touchDatas;
 
 @end
 
@@ -81,7 +140,7 @@
             touchData.toSelect = ![self.delegate fastSelector:self isTableViewCellSelectedAtIndexPath:indexPath];
         }
         
-        [self.touchDatas setObject:touchData forKey:[NSString stringWithFormat:@"%p", touch]];
+        [self.touchDatas setObject:touchData forKey:@((uintptr_t)touch)];
     }
 }
 
@@ -107,7 +166,7 @@
     [self handleTouchChanged:touches];
     for (UITouch *touch in touches)
     {
-        [self.touchDatas removeObjectForKey:[NSString stringWithFormat:@"%p", touch]];
+        [self.touchDatas removeObjectForKey:@((uintptr_t)touch)];
     }
 }
 
@@ -117,7 +176,7 @@
 {
     for (UITouch *touch in touches)
     {
-        VHFastSelectorTouchData *touchData = [self.touchDatas objectForKey:[NSString stringWithFormat:@"%p", touch]];
+        VHFastSelectorTouchData *touchData = [self.touchDatas objectForKey:@((uintptr_t)touch)];
         if (!touchData) continue;
         touchData.touchingLocationInView = [touch locationInView:self];
         touchData.touchingLocation = [self convertPoint:touchData.touchingLocationInView toView:self.tableView];
@@ -168,14 +227,14 @@
     {
         doRect = [self rectMakeFromPoint:touchData.touchingLocation andPoint2:touchData.touchedLocation];
     }
+    else if (SameOrder(touchData.touchedLocation.y, touchData.touchingLocation.y, touchData.beginLocation.y))
+    {
+        undoRect = [self rectMakeFromPoint:touchData.touchingLocation andPoint2:touchData.touchedLocation];
+    }
     else if (SameOrder(touchData.touchingLocation.y, touchData.beginLocation.y, touchData.touchedLocation.y))
     {
         doRect = [self rectMakeFromPoint:touchData.beginLocation andPoint2:touchData.touchingLocation];
         undoRect = [self rectMakeFromPoint:touchData.touchedLocation andPoint2:touchData.beginLocation];
-    }
-    else if (SameOrder(touchData.touchedLocation.y, touchData.touchingLocation.y, touchData.beginLocation.y))
-    {
-        undoRect = [self rectMakeFromPoint:touchData.touchingLocation andPoint2:touchData.touchedLocation];
     }
     else
     {
@@ -207,7 +266,7 @@
 
 #pragma mark - Getter
 
-- (NSMutableDictionary<NSString *,VHFastSelectorTouchData *> *)touchDatas
+- (NSMutableDictionary<NSNumber *,VHFastSelectorTouchData *> *)touchDatas
 {
     if (_touchDatas == nil) _touchDatas = [NSMutableDictionary dictionary];
     return _touchDatas;
