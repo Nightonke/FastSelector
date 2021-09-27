@@ -2,9 +2,7 @@
 
 >Supports 'swipe and scroll' selection for UITableView like App 'Files'.
 
-// put a video here.
-
-
+https://user-images.githubusercontent.com/7379793/134856311-c00d2744-5a10-4468-ab46-9b357a257d3e.mp4
 
 ### Usage
 
